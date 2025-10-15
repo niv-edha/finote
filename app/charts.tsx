@@ -5,23 +5,14 @@ import { useTransactions } from '../context/TransactionContext';
 import { Text, SegmentedButtons, useTheme } from 'react-native-paper';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 
-interface ChartData {
-  name: string;
-  amount: number;
-  color: string;
-  legendFontColor: string;
-  legendFontSize: number;
-}
-
 type ChartType = 'pie' | 'bar' | 'line';
 
-export default function ChartsScreen(): JSX.Element {
+export default function ChartsScreen() {
   const { transactions } = useTransactions();
   const [chartType, setChartType] = useState<ChartType>('pie');
   const theme = useTheme();
 
   const screenWidth = Dimensions.get('window').width;
-
   const expensesByCategory = transactions
     .filter((t) => t.type === 'expense')
     .reduce<Record<string, number>>((acc, t) => {
@@ -29,11 +20,11 @@ export default function ChartsScreen(): JSX.Element {
       return acc;
     }, {});
 
-  const pieChartData: ChartData[] = Object.entries(expensesByCategory).map(
+  const pieChartData = Object.entries(expensesByCategory).map(
     ([category, amount], index) => ({
       name: category,
       amount,
-      color: `hsl(${index * 37}, 70%, 50%)`,
+      color: `hsl(${index * 37}, 70%, 65%)`,
       legendFontColor: '#7F7F7F',
       legendFontSize: 12,
     })
@@ -68,57 +59,68 @@ export default function ChartsScreen(): JSX.Element {
     switch (chartType) {
       case 'pie':
         return (
-          <PieChart
-            data={pieChartData}
-            width={screenWidth - 32}
-            height={220}
-            chartConfig={{
-              color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-            }}
-            accessor="amount"
-            backgroundColor="transparent"
-            paddingLeft="15"
-            absolute
-          />
+          <View style={styles.chartCard}>
+            <PieChart
+              data={pieChartData}
+              width={screenWidth - 48}
+              height={240}
+              chartConfig={{
+                color: (opacity = 1) => `rgba(99, 71, 249, ${opacity})`,
+              }}
+              accessor="amount"
+              backgroundColor="transparent"
+              paddingLeft="20"
+              absolute
+            />
+          </View>
         );
       case 'bar':
         return (
-          <BarChart
-            data={barChartData}
-            width={screenWidth - 32}
-            height={220}
-            yAxisLabel="$"
-            chartConfig={{
-              backgroundGradientFrom: theme.colors.background,
-              backgroundGradientTo: theme.colors.background,
-              color: (opacity = 1) => theme.colors.primary,
-              labelColor: (opacity = 1) => theme.colors.text,
-            }}
-            verticalLabelRotation={30}
-          />
+          <View style={styles.chartCard}>
+            <BarChart
+              data={barChartData}
+              width={screenWidth - 48}
+              height={240}
+              yAxisLabel="₹"
+              chartConfig={{
+                backgroundGradientFrom: '#f3e8ff',
+                backgroundGradientTo: '#f3e8ff',
+                color: (opacity = 1) => "#22d3ee",
+                labelColor: (opacity = 1) => theme.colors.text,
+                propsForBackgroundLines: { stroke: "#e4e4e7" },
+              }}
+              verticalLabelRotation={22}
+            />
+          </View>
         );
       case 'line':
         return (
-          <LineChart
-            data={lineChartData}
-            width={screenWidth - 32}
-            height={220}
-            yAxisLabel="$"
-            chartConfig={{
-              backgroundGradientFrom: theme.colors.background,
-              backgroundGradientTo: theme.colors.background,
-              color: (opacity = 1) => theme.colors.primary,
-              labelColor: (opacity = 1) => theme.colors.text,
-            }}
-            bezier
-          />
+          <View style={styles.chartCard}>
+            <LineChart
+              data={lineChartData}
+              width={screenWidth - 48}
+              height={220}
+              yAxisLabel="₹"
+              chartConfig={{
+                backgroundGradientFrom: '#fbc2eb',
+                backgroundGradientTo: '#e0e7ff',
+                color: (opacity = 1) => "#6347f9",
+                labelColor: (opacity = 1) => theme.colors.text,
+                propsForDots: {
+                  r: '4',
+                  stroke: '#6347f9'
+                }
+              }}
+              bezier
+            />
+          </View>
         );
     }
   };
 
   return (
     <ScrollView style={styles.container}>
-      <Animated.View entering={FadeInUp.delay(200).duration(1000)}>
+      <Animated.View entering={FadeInUp.delay(150).duration(850)}>
         <Text style={styles.title}>Expense Analytics</Text>
         <SegmentedButtons
           value={chartType}
@@ -139,16 +141,27 @@ export default function ChartsScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    backgroundColor: '#f5f5f5',
+    padding: 18,
+    backgroundColor: '#f3e8ff',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 16,
+    marginBottom: 18,
     textAlign: 'center',
+    color: '#6347f9'
   },
   segmentedButtons: {
-    marginBottom: 16,
+    marginBottom: 20,
+    marginTop: 10,
+  },
+  chartCard: {
+    borderRadius: 20,
+    backgroundColor: '#fffbfe',
+    padding: 16,
+    shadowColor: '#bb9cf2',
+    shadowOpacity: 0.18,
+    shadowRadius: 17,
+    marginBottom: 24,
   },
 });

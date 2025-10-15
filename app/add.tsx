@@ -1,200 +1,68 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, ScrollView } from 'react-native';
-import {
-  TextInput,
-  Button,
-  SegmentedButtons,
-  useTheme,
-  Text,
-  Menu,
-} from 'react-native-paper';
-import { useTransactions } from '../context/TransactionContext';
-import Animated, { FadeInUp } from 'react-native-reanimated';
-import { router, usePathname } from 'expo-router';
-import { transactionCategories } from '../data/sampleTransactions';
-import { useForm, Controller } from 'react-hook-form';
+import React, { useState } from 'react';
+import { View, Text } from 'react-native';
+import { TextInput, Button } from 'react-native-paper';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 
-export default function AddTransactionScreen(): JSX.Element {
-  const [menuVisible, setMenuVisible] = useState(false);
-  const pathname = usePathname();
-  const { addTransaction } = useTransactions();
-  const theme = useTheme();
+// This component should be placed at app/add.tsx or app/add/index.tsx
+export default function AddExpenseScreen() {
+  const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState('');
+  const [date, setDate] = useState<Date>(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const {
-    control,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm({
-    defaultValues: {
-      amount: '',
-      category: '',
-      notes: '',
-      type: 'expense',
-    },
-  });
+  // Formatted amount (shows as ₹12,345.00 if amount is entered)
+  const formattedAmount =
+    amount && !isNaN(Number(amount))
+      ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(amount))
+      : '';
 
-  const onSubmit = async (data: any) => {
-    if (data.amount && data.category) {
-      const newTransaction = {
-        amount: parseFloat(data.amount),
-        category: data.category,
-        type: data.type,
-        date: new Date().toISOString(),
-        notes: data.notes,
-        synced: false,
-      };
-
-      await addTransaction(newTransaction);
-      reset();
-      router.replace('/');
-    }
+  // Correctly typed callback for the DateTimePicker
+  const onDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (selectedDate) setDate(selectedDate);
   };
 
-  useEffect(() => {
-    if (pathname === '/add') {
-      reset();
-    }
-  }, [pathname, reset]);
+  const handleAddExpense = () => {
+    // Save expense logic here (with amount, description, date)
+    // Example:
+    // addExpense({ amount: Number(amount), description, date });
+  };
 
   return (
-    <ScrollView style={styles.container}>
-      <Animated.View entering={FadeInUp.delay(200).duration(1000)}>
-        <Text style={styles.title}>Add New Transaction</Text>
-        <Controller
-          control={control}
-          name="type"
-          render={({ field: { onChange, value } }) => (
-            <SegmentedButtons
-              value={value}
-              onValueChange={(val) => onChange(val)}
-              buttons={[
-                { value: 'expense', label: 'Expense' },
-                { value: 'income', label: 'Income' },
-              ]}
-              style={styles.segmentedButtons}
-            />
-          )}
+    <View style={{ padding: 20 }}>
+      <TextInput
+        label="Amount (₹)"
+        value={amount}
+        onChangeText={setAmount}
+        keyboardType="numeric"
+        style={{ marginBottom: 8 }}
+      />
+      {/* Show formatted rupees value if any */}
+      {formattedAmount ? (
+        <Text style={{ color: '#6347f9', fontWeight: 'bold', marginBottom: 12 }}>
+          {formattedAmount}
+        </Text>
+      ) : null}
+      <TextInput
+        label="Description"
+        value={description}
+        onChangeText={setDescription}
+        style={{ marginBottom: 16 }}
+      />
+      <Button mode="outlined" onPress={() => setShowDatePicker(true)} style={{ marginBottom: 16 }}>
+        Pick Date: {date.toDateString()}
+      </Button>
+      {showDatePicker && (
+        <DateTimePicker
+          value={date}
+          mode="date"
+          display="default"
+          onChange={onDateChange}
         />
-        <Controller
-          control={control}
-          name="amount"
-          rules={{ required: 'Amount is required' }}
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              label="Amount"
-              value={value}
-              onChangeText={onChange}
-              keyboardType="numeric"
-              style={styles.input}
-              mode="outlined"
-              error={!!errors.amount}
-            />
-          )}
-        />
-        {errors.amount && (
-          <Text style={styles.errorText}>{errors.amount.message}</Text>
-        )}
-
-        <Controller
-          control={control}
-          name="category"
-          rules={{ required: 'Category is required' }}
-          render={({ field: { onChange, value } }) => (
-            <>
-              <Menu
-                visible={menuVisible}
-                onDismiss={() => setMenuVisible(false)}
-                anchor={
-                  <TextInput
-                    label="Category"
-                    value={value}
-                    onFocus={() => setMenuVisible(true)}
-                    style={styles.input}
-                    mode="outlined"
-                    error={!!errors.category}
-                    right={
-                      <TextInput.Icon
-                        icon="menu-down"
-                        onPress={() => setMenuVisible(true)}
-                      />
-                    }
-                  />
-                }
-              >
-                {transactionCategories.map((cat) => (
-                  <Menu.Item
-                    key={cat}
-                    onPress={() => {
-                      onChange(cat);
-                      setMenuVisible(false);
-                    }}
-                    title={cat}
-                  />
-                ))}
-              </Menu>
-              {errors.category && (
-                <Text style={styles.errorText}>{errors.category.message}</Text>
-              )}
-            </>
-          )}
-        />
-
-        <Controller
-          control={control}
-          name="notes"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              label="Notes"
-              value={value}
-              onChangeText={onChange}
-              multiline
-              style={styles.input}
-              mode="outlined"
-            />
-          )}
-        />
-        <Button
-          mode="contained"
-          onPress={handleSubmit(onSubmit)}
-          style={styles.button}
-          labelStyle={styles.buttonLabel}
-        >
-          Add Transaction
-        </Button>
-      </Animated.View>
-    </ScrollView>
+      )}
+      <Button mode="contained" onPress={handleAddExpense}>
+        Add Expense
+      </Button>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: '#f5f5f5',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  segmentedButtons: {
-    marginBottom: 16,
-  },
-  input: {
-    marginBottom: 16,
-  },
-  button: {
-    marginTop: 16,
-    paddingVertical: 8,
-  },
-  buttonLabel: {
-    fontSize: 16,
-  },
-  errorText: {
-    color: 'red',
-    fontSize: 12,
-    marginBottom: 8,
-  },
-});

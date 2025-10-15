@@ -1,63 +1,56 @@
-import React from 'react';
-import { Tabs } from 'expo-router';
+import React, { useState } from 'react';
+import Login from './login';
 import { PaperProvider, MD3LightTheme } from 'react-native-paper';
-import { Ionicons } from '@expo/vector-icons';
 import { TransactionProvider } from '../context/TransactionContext';
 import Toast from 'react-native-toast-message';
+import { Ionicons } from '@expo/vector-icons';
+import { Tabs } from 'expo-router';
 
-type RouteName = 'index' | 'add' | 'history' | 'charts';
-
-interface IconMapping {
-  focused: keyof typeof Ionicons.glyphMap;
-  unfocused: keyof typeof Ionicons.glyphMap;
+// Safe icon getter for dynamic routes
+function getTabIcon(name: string, focused: boolean): keyof typeof Ionicons.glyphMap {
+  switch (name) {
+    case 'history':
+      return focused ? 'list' : 'list-outline';
+    case 'index':
+      return focused ? 'home' : 'home-outline';
+    case 'add':
+      return focused ? 'add-circle' : 'add-circle-outline';
+    case 'charts':
+      return focused ? 'pie-chart' : 'pie-chart-outline';
+    default:
+      return 'help-outline';
+  }
 }
 
 const theme = {
   ...MD3LightTheme,
+  roundness: 14,
   colors: {
     ...MD3LightTheme.colors,
-    primary: '#6200ee',
-    secondary: '#03dac6',
-    background: '#f5f5f5',
-  },
-};
-
-const ICONS: Record<RouteName, IconMapping> = {
-  index: {
-    focused: 'home',
-    unfocused: 'home-outline',
-  },
-  add: {
-    focused: 'add-circle',
-    unfocused: 'add-circle-outline',
-  },
-  history: {
-    focused: 'list',
-    unfocused: 'list-outline',
-  },
-  charts: {
-    focused: 'pie-chart',
-    unfocused: 'pie-chart-outline',
+    primary: '#6347f9',
+    secondary: '#22d3ee',
+    background: '#f3e8ff',
+    cardBg: '#fffbfe',
+    error: '#ff3f5a',
   },
 };
 
 export default function AppLayout() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  if (!isAuthenticated) {
+    return <Login onLogin={() => setIsAuthenticated(true)} />;
+  }
+
   return (
     <PaperProvider theme={theme}>
       <TransactionProvider>
         <Tabs
+          initialRouteName="history"
           screenOptions={({ route }) => ({
-            tabBarIcon: ({ focused, color, size }) => {
-              const routeName = route.name as RouteName;
-              const icons = ICONS[routeName];
-              const iconName = icons
-                ? focused
-                  ? icons.focused
-                  : icons.unfocused
-                : 'help-outline';
-
-              return <Ionicons name={iconName} size={size} color={color} />;
-            },
+            tabBarIcon: ({ focused, color, size }) => (
+              <Ionicons name={getTabIcon(route.name, focused)} size={size} color={color} />
+            ),
             tabBarActiveTintColor: theme.colors.primary,
             tabBarInactiveTintColor: 'gray',
             tabBarStyle: { backgroundColor: 'white' },
@@ -65,30 +58,11 @@ export default function AppLayout() {
             headerTintColor: 'white',
           })}
         >
-          <Tabs.Screen
-            name="index"
-            options={{
-              title: 'Dashboard',
-            }}
-          />
-          <Tabs.Screen
-            name="add"
-            options={{
-              title: 'Add Transaction',
-            }}
-          />
-          <Tabs.Screen
-            name="history"
-            options={{
-              title: 'Transaction History',
-            }}
-          />
-          <Tabs.Screen
-            name="charts"
-            options={{
-              title: 'Analytics',
-            }}
-          />
+          {/* No component prop, just use file-based routing */}
+          <Tabs.Screen name="history" options={{ title: 'History' }} />
+          <Tabs.Screen name="index" options={{ title: 'Home' }} />
+          <Tabs.Screen name="add" options={{ title: 'Add' }} />
+          <Tabs.Screen name="charts" options={{ title: 'Charts' }} />
         </Tabs>
         <Toast />
       </TransactionProvider>

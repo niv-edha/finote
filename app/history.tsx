@@ -4,20 +4,19 @@ import { List, Text, Searchbar, Chip, useTheme } from 'react-native-paper';
 import { useTransactions } from '../context/TransactionContext';
 import { Transaction } from '../types';
 import Animated, { FadeInUp } from 'react-native-reanimated';
-import { HistoryItem } from '@/components/HistoryItem';
+import { TransactionItem } from '../components/TransactionItem';
 
-export default function TransactionHistoryScreen(): JSX.Element {
+// Main Transaction History Screen
+export default function HistoryScreen() {
   const { transactions } = useTransactions();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedType, setSelectedType] = useState<
-    'all' | 'income' | 'expense'
-  >('all');
+  const [selectedType, setSelectedType] = useState<'all' | 'income' | 'expense'>('all');
   const theme = useTheme();
 
   const filteredTransactions = transactions.filter((transaction) => {
     const matchesSearch =
       transaction.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      transaction.notes.toLowerCase().includes(searchQuery.toLowerCase());
+      (transaction.notes && transaction.notes.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesType =
       selectedType === 'all' || transaction.type === selectedType;
     return matchesSearch && matchesType;
@@ -26,7 +25,7 @@ export default function TransactionHistoryScreen(): JSX.Element {
   const renderItem = useCallback(
     ({ item, index }: { item: Transaction; index: number }) => (
       <Animated.View entering={FadeInUp.delay(index * 100).duration(500)}>
-        <HistoryItem index={index} item={item} />
+        <TransactionItem transaction={item} />
       </Animated.View>
     ),
     [theme.colors.primary, theme.colors.error]
@@ -69,6 +68,12 @@ export default function TransactionHistoryScreen(): JSX.Element {
         )}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
+        contentContainerStyle={{ paddingBottom: 20 }}
+        ListEmptyComponent={
+          <Text style={{ textAlign: 'center', marginTop: 40, color: '#a0aec0' }}>
+            No transactions found
+          </Text>
+        }
       />
     </View>
   );
@@ -77,7 +82,7 @@ export default function TransactionHistoryScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f3e8ff',
   },
   searchBar: {
     margin: 16,
@@ -89,25 +94,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   filterChip: {
+    backgroundColor: '#c7d2fe',
+    borderRadius: 14,
     marginHorizontal: 4,
-  },
-  amountContainer: {
-    alignItems: 'flex-end',
-  },
-  amount: {
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  date: {
-    fontSize: 12,
-    color: '#666',
-  },
-  syncStatus: {
-    fontSize: 18,
-    marginLeft: 8,
-  },
-  rowContainer: {
-    flexDirection: 'row',
-    gap: 2,
   },
 });

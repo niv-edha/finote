@@ -1,7 +1,6 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import { Text, useTheme } from "react-native-paper";
-
 import { Ionicons } from "@expo/vector-icons";
 import type { Transaction } from "../types";
 
@@ -11,6 +10,10 @@ interface TransactionItemProps {
 
 export const TransactionItem = ({ transaction }: TransactionItemProps) => {
   const theme = useTheme();
+
+  // Format amount as Indian Rupees (e.g. ₹12,345.00)
+  const formattedAmount = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(transaction.amount);
+
   return (
     <View key={transaction.id} style={styles.transactionItem}>
       <Ionicons
@@ -43,7 +46,7 @@ export const TransactionItem = ({ transaction }: TransactionItemProps) => {
           },
         ]}
       >
-        ${transaction.amount.toFixed(2)}
+        {formattedAmount}
       </Text>
     </View>
   );
